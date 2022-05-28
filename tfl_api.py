@@ -1,6 +1,8 @@
 import requests
 from requests.auth import HTTPBasicAuth
 import json
+import time
+
 
 class TflAPI:
 
@@ -18,11 +20,16 @@ class TflAPI:
             request_url = f"https://api.tfl.gov.uk/Line/Mode/{travel_mode}/Route"
             r = requests.get(request_url, auth=self.auth, headers=self.headers)
             results = r.json()
+
+            all_bus_lines = []
+            for line in results:
+                all_bus_lines.append([line['id'], line['name'], line['modeName'], line['created'], line['modified'], line['routeSections']])
+
         except Exception as e:
             print(f"Error querying lines for {mode}")
             return
 
-        return [results['lineId'], results['lineName'], results['direction'], results['mode'], results['orderedLineRoutes'][0]['name'],results['orderedLineRoutes'][0]['naptanIds']]
+        return all_bus_lines
 
     def get_route(self, line_id, direction):
         # Request and return station ids
@@ -33,27 +40,29 @@ class TflAPI:
             r = requests.get(request_url, auth=self.auth, headers=self.headers)
             results = r.json()
 
-            all_bus_lines = []
-            for line in results:
-                all_bus_lines.append([line['id'], line['name'], line['modeName'], line['mode'], line['created'], line['modified'], line['routeSections']])
-
         except Exception as e:
             print(f"Error querying route for {line_id}")
             return
 
-        return all_bus_lines
+        return [results['lineId'], results['lineName'], results['direction'], results['mode'], results['orderedLineRoutes'][0]['name'],results['orderedLineRoutes'][0]['naptanIds']]
 
 APIKEY = "a328020e810c4e19b9952b6485351e2e"
 
 tfl_api = TflAPI(APIKEY)
 bus_route = tfl_api.get_route(1, "inbound")
 all_bus_lines = tfl_api.get_all_bus_line()
+len(all_bus_lines)
 
-id = 1
-direction = "inbound"
-# [?serviceTypes][&excludeCrowding]
-bus_route = requests.get("https://api.tfl.gov.uk/Line/Mode/bus/Route")
+data_loc = "/Users/nochris/Dropbox/My Mac (macbook-pro.lan)/Documents/london_bus_data"
+timestr = time.strftime("%Y_%m_%d-%H:%M:%S")
+with open(f'{data_loc}/all_bus_lines_{timestr}.json', 'w') as f:
+    json.dump(all_bus_lines, f)
+
 parsed = json.loads(bus_route.content)
+
+
+
+
 
 for key, value in parsed[0].items():
     print(key, value)
