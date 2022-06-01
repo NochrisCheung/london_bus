@@ -3,6 +3,7 @@ from requests.auth import HTTPBasicAuth
 import json
 import time
 
+APIKEY = "a328020e810c4e19b9952b6485351e2e"
 
 class TflAPI:
 
@@ -46,63 +47,19 @@ class TflAPI:
 
         return [results['lineId'], results['lineName'], results['direction'], results['mode'], results['orderedLineRoutes'][0]['name'],results['orderedLineRoutes'][0]['naptanIds']]
 
-APIKEY = "a328020e810c4e19b9952b6485351e2e"
+    def get_station_gps_location(self, station_id):
+        self.request_count += 1
 
-tfl_api = TflAPI(APIKEY)
-bus_route = tfl_api.get_route(1, "inbound")
-all_bus_lines = tfl_api.get_all_bus_line()
-len(all_bus_lines)
+        try:
+            request_url = f"https://api.tfl.gov.uk/StopPoint/{station_id}"
+            r = requests.get(request_url, auth=self.auth, headers=self.headers)
+            results = r.json()
 
-data_loc = "/Users/nochris/Dropbox/My Mac (macbook-pro.lan)/Documents/london_bus_data"
-timestr = time.strftime("%Y_%m_%d-%H:%M:%S")
-with open(f'{data_loc}/all_bus_lines_{timestr}.json', 'w') as f:
-    json.dump(all_bus_lines, f)
+        except Exception as e:
+            print(f"Error querying station gps location for {station_id}")
+            return
 
-parsed = json.loads(bus_route.content)
-
-
+        return [results['lat'], results['lon']]
 
 
-
-for key, value in parsed[0].items():
-    print(key, value)
-parsed[0].keys()
-parsed['orderedLineRoutes']
-parsed["stations"][0]
-parsed["orderedLineRoutes"]
-for key, value in parsed["stations"][0].items():
-    print(key)
-
-
-for stations in parsed['stopPointSequences'][0]['stopPoint']:
-    print(stations["name"])
-for key, value in parsed.items():
-    print(key)
-
-parsed['stopPointSequences'][0].keys()
-
-parsed['stopPointSequences'][0]['stopPoint'][0]['name']
-
-
-
-
-print(json.dumps(parsed, indent=4))
-
-
-
-
-
-func parse_json(json_file):
-    parsed = json.loads(json_file.content)
-
-
-bus_sequence = requests.get("https://api.tfl.gov.uk/Line/1/StopPoints")
-bus_routes = requests.get("https://api.tfl.gov.uk/Line/1/Route")
-br_parsed = json.loads(bus_routes.content)
-print(json.dumps(br_parsed, indent=4, sort_keys=True))
-
-for key, value in parsed[1].items():
-    print(key, value)
-
-parsed[0].keys()
-print(json.dumps(parsed, indent=4, sort_keys=True))
+# print(json.dumps(parsed, indent=4, sort_keys=True))
